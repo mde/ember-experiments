@@ -1,0 +1,52 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+    <script src="js/libs/jquery-1.11.1.min.js"></script>
+    <script src="js/libs/handlebars-v1.3.0.js"></script>
+    <script src="js/libs/ember.js"></script>
+
+    <script type="text/x-handlebars" data-template-name="application">
+      <header>
+      <h1>Fonebone, Inc.</h1>
+      </header>
+
+      <div>
+      {{outlet derp}}
+      </div>
+
+      <footer>
+      &copy; 2112 Fonebone, Inc.
+      </footer>
+    </script>
+
+    <script type="text/x-handlebars" data-template-name="main">
+      Hello {{#view 'thing'}}Submit{{/view}}Goodbye
+    </script>
+
+    <script>
+      var App = Ember.Application.create();
+
+      App.IndexRoute = Ember.Route.extend({
+        renderTemplate: function () {
+          console.log('foo');
+          this.render('main', {
+            outlet: 'derp'
+          });
+        }
+      });
+      App.Thing = Ember.View.extend({
+        template: Handlebars.compile('<button>Howdy<button>')
+      });
+      App.register('view:thing', App.Thing, { instantiate: false });
+    </script>
+
+  </body>
+</html>
+
