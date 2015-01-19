@@ -8,9 +8,9 @@
   </head>
   <body>
 
-    <script src="js/libs/jquery-1.11.1.min.js"></script>
-    <script src="js/libs/handlebars-v1.3.0.js"></script>
-    <script src="js/libs/ember.js"></script>
+    <script src="js/libs/jquery-1.9.1.min.js"></script>
+    <script src="js/libs/handlebars-1.0.0-rc.4.js"></script>
+    <script src="js/libs/ember-1.0.0-rc.5.js"></script>
 
     <script type="text/x-handlebars" data-template-name="application">
       <header>
@@ -27,24 +27,55 @@
     </script>
 
     <script type="text/x-handlebars" data-template-name="main">
-      Hello {{#view 'thing'}}Submit{{/view}}Goodbye
+      Hello {{view App.Thing}} Goodbye
     </script>
 
     <script>
       var App = Ember.Application.create();
+      Ember.Application.initializer({
+        name: 'thing',
+        initialize: function (container, application) {
+          application.register('view:thing', App.Thing, {instantiate: false});
+        }
+      });
 
       App.IndexRoute = Ember.Route.extend({
         renderTemplate: function () {
-          console.log('foo');
           this.render('main', {
-            outlet: 'derp'
+            outlet: 'derp',
+            controller: 'foo'
           });
         }
       });
-      App.Thing = Ember.View.extend({
-        template: Handlebars.compile('<button>Howdy<button>')
+
+      App.ThingA = Ember.View.extend({
+        template: Handlebars.compile('<form><a href="#">HELLO A</a></form>')
       });
-      App.register('view:thing', App.Thing, { instantiate: false });
+      App.ThingB = Ember.View.extend({
+        template: Handlebars.compile('<form><a href="#">HELLO B</a></form>')
+      });
+
+      App.IndexController = Ember.Controller.extend({
+        barbaz: 'QWER'
+      });
+      App.FooController = App.IndexController.extend({
+        barbaz: 'ZXCV',
+        ctor: App.ThingA
+      });
+      App.BarController = App.IndexController.extend({
+        barbaz: 'ZXCV',
+        ctor: App.ThingB
+      });
+
+      App.Thing = Ember.ContainerView.extend({
+        //template: Handlebars.compile('<form><a href="#">HELLO</a></form>')
+        init: function () {
+          this._super();
+          var ctor = this.get('controller').get('ctor');
+          this.pushObject(ctor.create());
+        }
+      });
+
     </script>
 
   </body>
