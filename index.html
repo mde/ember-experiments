@@ -4,13 +4,13 @@
   <head>
     <meta charset="utf-8">
     <title></title>
-    <link rel="stylesheet" href="style.css">
   </head>
   <body>
 
     <script src="js/libs/jquery-1.9.1.min.js"></script>
     <script src="js/libs/handlebars-1.0.0-rc.4.js"></script>
     <script src="js/libs/ember-1.0.0-rc.5.js"></script>
+    <script src="js/libs/ember-data-0.13-1-g8352a3a.js"></script>
 
     <script type="text/x-handlebars" data-template-name="application">
       <header>
@@ -34,10 +34,29 @@
       var App = Ember.Application.create();
       Ember.Application.initializer({
         name: 'thing',
+        // Ember >1.0 only
         initialize: function (container, application) {
           application.register('view:thing', App.Thing, {instantiate: false});
         }
       });
+
+      App.Store = DS.Store.extend({
+      });
+
+      App.ThingA = DS.Model.extend({
+        fooBar: DS.attr(),
+        barBaz: DS.attr()
+      });
+
+      App.ThingA.reopenClass({
+        FIXTURES: [
+          {id: 1, fooBar: 'FOOFOO-1', barBaz: 'BARBAR-1'},
+          {id: 2, fooBar: 'BARBAR-1', barBaz: 'BAZBAZ-2'}
+        ]
+      });
+
+      // ember-data pre 1.0
+      App.Store.registerAdapter('App.ThingA', DS.FixtureAdapter.extend());
 
       App.IndexRoute = Ember.Route.extend({
         renderTemplate: function () {
@@ -48,10 +67,24 @@
         }
       });
 
-      App.ThingA = Ember.View.extend({
-        template: Handlebars.compile('<form><a href="#">HELLO A</a></form>')
+      App.ThingAView = Ember.View.extend({
+        template: Handlebars.compile('<form><a href="#">HELLO A</a></form>'),
+        init: function () {
+          var c = this.get('controller'),
+              store = c.store,
+              m;
+          store.createRecord(App.ThingA, {
+            fooBar: 'ASDF',
+            barBaz: 'ZXCV'
+          });
+          things = App.ThingA.find(1).then(function () {
+            console.log(arguments[0].get('fooBar'));
+          });
+          console.log(things);
+          this._super();
+        }
       });
-      App.ThingB = Ember.View.extend({
+      App.ThingBView = Ember.View.extend({
         template: Handlebars.compile('<form><a href="#">HELLO B</a></form>')
       });
 
@@ -60,19 +93,20 @@
       });
       App.FooController = App.IndexController.extend({
         barbaz: 'ZXCV',
-        ctor: App.ThingA
+        ctor: App.ThingAView,
+        model: App.ThingA
       });
       App.BarController = App.IndexController.extend({
         barbaz: 'ZXCV',
-        ctor: App.ThingB
+        ctor: App.ThingBView
       });
 
       App.Thing = Ember.ContainerView.extend({
-        //template: Handlebars.compile('<form><a href="#">HELLO</a></form>')
         init: function () {
           this._super();
           var ctor = this.get('controller').get('ctor');
-          this.pushObject(ctor.create());
+          ctor = this.createChildView(ctor);
+          this.pushObject(ctor);
         }
       });
 
